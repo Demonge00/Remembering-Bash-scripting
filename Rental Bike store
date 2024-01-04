@@ -138,3 +138,59 @@ EXIT() {
     echo -e "\nThank you for stopping in.\n"
 }
 MAIN_MENU
+
+
+
+## ANOTHER EXAMPLE WITH SALON
+#! /bin/bash
+
+PSQL="psql -X --username=freecodecamp --dbname=salon --tuples-only -c"
+
+MAIN_MENU() {
+  if [[ $1 ]]
+  then
+  echo -e "\n~~$1~~\n"
+  fi
+  echo -e "\n~~Hello thanks for call 'FanArt Salon'~~\n"
+  echo -e "~~Wich service would you like?~~\n" 
+  SERVICES=$($PSQL "SELECT service_id,name from services;")
+  echo "$SERVICES" | while read ID VAR SERVICE
+  do
+    echo "$ID) $SERVICE"
+  done
+  read Chosen_Service
+  case $Chosen_Service in
+  1) SERVICE_MENU 1;;
+  2) SERVICE_MENU 2;;
+  3) SERVICE_MENU 3;;
+  *) MAIN_MENU "Select a valid choise"
+  esac
+}
+SERVICE_MENU() {
+  #GUARDAR ID DEL SERVICIO
+  echo $1 | read SERVICE_ID_SELECTED
+  SERVICE_ID_SELECTED=$1
+  echo $SERVICE_ID_SELECTED
+  echo -e "\n~~Please Enter your Phone Number~~\n"
+  #RECIBIR NUMERO DE TELEFONO
+  read CUSTOMER_PHONE
+  #SELECCIONAR NOMBRE
+  CUSTOMER_NAME=$($PSQL "SELECT name FROM customers Where phone='$CUSTOMER_PHONE'")
+  #SI NO ESTA REGISTRADO
+  if [[ -z $CUSTOMER_NAME ]]
+  then
+      echo -e "\n~~Please Enter your Name~~\n"
+      read CUSTOMER_NAME
+      ENTER_INFO_CUSTOMERS=$($PSQL "INSERT INTO customers(name,phone) VALUES('$CUSTOMER_NAME','$CUSTOMER_PHONE');")
+  fi
+  echo -e "\n~~Please Enter your Appointment Time~~\n"
+  read SERVICE_TIME
+  CUSTOMER_ID=$($PSQL "SELECT customer_id FROM customers Where phone='$CUSTOMER_PHONE'")
+  ENTER_APPOINTMENT=$($PSQL "INSERT INTO appointments(customer_id,service_id,time) VALUES($CUSTOMER_ID,$SERVICE_ID_SELECTED,'$SERVICE_TIME')")
+  SERVICE=$($PSQL "SELECT name FROM services Where service_id='$SERVICE_ID_SELECTED'")
+  if [[ $ENTER_APPOINTMENT ]]
+  then
+  echo -e "\nI have put you down for a $SERVICE at $SERVICE_TIME, $CUSTOMER_NAME.\n"
+  fi
+}
+MAIN_MENU
