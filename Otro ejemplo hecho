@@ -1,0 +1,24 @@
+#!/bin/bash
+
+ PSQL="psql --username=freecodecamp --dbname=periodic_table -t --no-align --tuples-only -c"
+ if [[ $1 ]]
+ then
+    if [[ $1 =~ ^[0-9]+$ ]]
+    then
+    ATOMIC_NUMBER=$($PSQL "SELECT atomic_number FROM elements Where atomic_number='$1'")
+    else
+    ATOMIC_NUMBER=$($PSQL "SELECT atomic_number FROM elements Where symbol='$1' or name='$1'")
+    fi
+    if [[ $ATOMIC_NUMBER ]]
+    then
+    ELEMENT_INFO=$($PSQL "SELECT * FROM elements INNER JOIN properties USING(atomic_number) LEFT JOIN types USING(type_id) Where atomic_number=$ATOMIC_NUMBER")
+    echo $ELEMENT_INFO | while IFS='|' read EXTRA an s name am mpc bpc tp
+    do
+    echo "The element with atomic number $an is $name ($s). It's a $tp, with a mass of $am amu. $name has a melting point of $mpc celsius and a boiling point of $bpc celsius."
+    done
+    else
+    echo I could not find that element in the database.
+    fi
+ else
+ echo Please provide an element as an argument.
+ fi
